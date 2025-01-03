@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vocab</title>
+    <!-- <link rel="icon" href="static/img/padlock.png" /> -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <style></style>
+  </head>
+  <body>
+    <div>
+        <button onclick="save()">Click me</button>
+    </div>
+    <script>
+      function save() {
+        $.ajax({
+          url: 'https://akyworld.pythonanywhere.com/scode/akshil005',
+          type: 'POST',
+          success: function (response) {
+            console.log(response);
+          },
+          error: function (error) {
+            const errorMessage = error.responseJSON?.msg || 'Unknown error'
+            $('#result').text('Error: ' + errorMessage)
+          }
+        })
+      }
+    </script>
+  </body>
+</html>
