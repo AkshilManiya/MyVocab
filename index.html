@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language Learning</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="static/css/index.css">
+    <link rel="icon" href="static/img/book.png" />
+</head>
+<body>
+    <div class="nav-container">
+        <button onclick="window.location.href='verbs/linker.html'">Verbs</button>
+        <button onclick="window.location.href='nouns'">Nouns</button>
+    </div>
+    <div class="search-container">
+        <input type="text" id="search" placeholder="Search for verbs or nouns..." onkeyup="Search()" />
+    </div>
+    <div class="data-container">
+        <div class="verbs" id="data">
+            <div class="heading">Verbs</div>
+            <p>No data found</p>
+        </div>
+    </div>
+    <script>
+        function Search() {
+            var search = $("#search").val().toLowerCase();
+            console.log(search);
+
+            $.ajax({
+                url: "https://avidenix.pythonanywhere.com/verbs/search",
+                type: "GET",
+                data: { query: search },
+                success: function (response) {
+                    console.log(response);
+                    if (response.error) {
+                        $("#data").html("<p>No data found</p>");
+                        return;
+                    }
+
+                    let html = "";
+                    response.forEach(verb => {
+                        html += `
+                            <div class="verb-box">
+                                <div class="word">${verb.English} (${verb.Gujrati || "N/A"})</div>
+                                <div class="conjugations">
+                                    <div><label>V1:</label> <span>${verb["G(v1)"]}</span></div>
+                                    <div><label>V2:</label> <span>${verb["G(v2)"]}</span></div>
+                                    <div><label>V3:</label> <span>${verb["G(v3)"]}</span></div>
+                                </div>
+                                <div class="pronouns" style="display: none;">
+                                    <div><label>Ich:</label> <span>${verb.Ich}</span></div>
+                                    <div><label>Du:</label> <span>${verb.Du}</span></div>
+                                    <div><label>Er/Sie/Es:</label> <span>${verb["Er/Sie/Es"]}</span></div>
+                                    <div><label>Wir:</label> <span>${verb.Wir}</span></div>
+                                    <div><label>Ihr:</label> <span>${verb.Ihr}</span></div>
+                                    <div><label>Sie/sie:</label> <span>${verb["Sie/sie"]}</span></div>
+                                </div>
+                                <div class="show-more" onclick="togglePronouns(this)">Show more</div>
+                            </div>
+                        `;
+                    });
+
+                    $("#data").html(html);
+                },
+                error: function () {
+                    $("#data").html("<p>Error fetching data</p>");
+                }
+            });
+        }
+
+
+        function togglePronouns(element) {
+            const pronouns = element.previousElementSibling;
+            if (pronouns.style.display === "none") {
+                pronouns.style.display = "block";
+                element.innerText = "Show less";
+            } else {
+                pronouns.style.display = "none";
+                element.innerText = "Show more";
+            }
+        }
+
+    </script>
+</body>
+</html>

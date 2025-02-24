@@ -1,0 +1,61 @@
+.result_frame {
+    width: 70%;
+    margin: 0px auto;
+    margin-top: 10px;
+}
+
+.result {
+    border-radius: var(--border-radius);
+    padding: 20px;
+    text-align: center;
+    font-size: large;
+    color: white;
+    background-color: lightgreen;
+}
+
+.write {
+    background-color: lightgreen;
+    border: 2px solid green;
+}
+
+.wrong {
+    background-color: lightcoral;
+    border: 2px solid red;
+}
+
+.opration_buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    width: 70%;
+    margin: 20px auto;
+    align-items: center;
+}
+
+.opration_buttons button {
+    background: var(--primary-color);
+    color: white;
+    width: 100%;
+    box-sizing: border-box;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background var(--transition-speed);
+}
+
+.opration_buttons button:hover {
+    background: #357ABD;
+}
+
+
+@media (max-width: 600px) {
+    .opration_buttons {
+        flex-direction: column;
+    }
+
+    .opration_buttons button {
+        width: 80%;
+    }
+}

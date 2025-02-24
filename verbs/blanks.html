@@ -1,0 +1,205 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Verbs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    
+    <link rel="stylesheet" href="../static/css/verbs/verbs.css">
+
+    <link rel="stylesheet" href="../static/css/verbs/result.css">
+    <link rel="stylesheet" href="../static/css/verbs/alphas.css">
+    <link rel="icon" href="../static/img/book.png" />
+
+
+    <style>
+
+        .blanks-container {
+            background: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            width: 70%;
+            margin: 20px auto;
+        }
+
+        .input-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        label {
+            font-size: 20px;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        #ans {
+            font-size: 18px;
+            padding: 10px;
+            border: none;
+            border-bottom: 2px solid var(--primary-color);
+            text-align: center;
+            width: 80%;
+            max-width: 250px;
+            background: transparent;
+            outline: none;
+        }
+
+
+        @media (max-width: 600px) {
+            .blanks-container {
+                width: 90%;
+                box-sizing: border-box;
+            }
+
+            label {
+                font-size: 18px;
+            }
+
+            #ans {
+                font-size: 16px;
+                max-width: 120px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="nav-container">
+        <button onclick="window.location.href='../verbs/linker.html'">Link Verbs</button>
+        <button onclick="window.location.href='../verbs/quiz.html'">Quize</button>
+        <button onclick="window.location.href='../verbs/blanks.html'">Blanks</button>
+    </div>
+
+    <div class="result-frame">
+        <div class="result-data">
+            <div><label>Correct: </label><span id="correct-count">0</span></div>
+            <div><label>Incorrect: </label><span id="incorrect-count">0</span></div>
+            <div><label>Time: </label><span id="timer">0s</span></div>
+        </div>
+        <button class="reset" onclick="initializeGame()">Reset</button>
+    </div>
+
+    <div class="blanks-container">
+        <div class="input-container">
+            <label id="person">Ich</label>
+            <label id="verb">(to come)</label>
+            <input type="text" id="ans">
+        </div>
+        
+        <div class="alphabets">
+            <div onclick="write_text('Ä')" class="alphas">Ä</div>
+            <div onclick="write_text('Ö')" class="alphas">Ö</div>
+            <div onclick="write_text('Ü')" class="alphas">Ü</div>
+            <div onclick="write_text('ß')" class="alphas">ß</div>
+            <div onclick="write_text('ä')" class="alphas">ä</div>
+            <div onclick="write_text('ö')" class="alphas">ö</div>
+            <div onclick="write_text('ü')" class="alphas">ü</div>
+        </div>
+
+        <div class="opration_buttons">
+            <button onclick="blankFetch()">Next</button>
+            <button onclick="blankCheck()">Check</button>
+        </div>
+        
+        <div class="result_frame">
+            <div class="result" id="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        let correctCount = 0;
+        let incorrectCount = 0;
+        let timer = 0;
+        let interval;
+        let correctAnswer = '';
+
+        $(document).ready(function () {
+            $('#ans').on('keypress', function (e) {
+                if (e.which === 13) {
+                    blankCheck();
+                }
+            });
+
+            initializeGame();
+        });
+
+        function write_text(alpha) {
+            let ansInput = $('#ans');
+            ansInput.val(ansInput.val() + alpha);
+            ansInput.focus();
+        }
+
+        function startTimer() {
+            stopTimer();
+            interval = setInterval(function () {
+                timer++;
+                $('#timer').text(timer + 's');
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(interval);
+        }
+
+        function initializeGame() {
+            correctCount = 0;
+            incorrectCount = 0;
+            timer = 0;
+            $('#correct-count').text(correctCount);
+            $('#incorrect-count').text(incorrectCount);
+            $('#timer').text(timer + 's');
+            $('#ans').val('');
+            $('#result').hide();
+            startTimer();
+            blankFetch();
+        }
+
+        function blankFetch() {
+            $.ajax({
+                url: 'https://avidenix.pythonanywhere.com/verbs/get_blanks',
+                type: 'GET',
+                success: function (response) {
+                    console.log(response);
+                    if (response.pronoun && response.english && response.german) {
+                        $('#person').text(response.pronoun);
+                        $('#verb').text('(' + response.english + ')');
+                        correctAnswer = response.german.trim().toLowerCase();
+                        $('#ans').val('');
+                        $('#result').hide();
+                    } else {
+                        console.error('Invalid response:', response);
+                    }
+                },
+                error: function () {
+                    alert('Error fetching data. Please try again.');
+                }
+            });
+        }
+
+        function blankCheck() {
+            let answer = $('#ans').val().trim().toLowerCase();
+            if (answer === correctAnswer) {
+                correctCount++;
+                $('#result').text('Correct!').removeClass('wrong').addClass('write').show();
+                setTimeout(() => {
+                    blankFetch();
+                }, 400);
+            } else {
+                incorrectCount++;
+                $('#result').text(correctAnswer)
+                    .removeClass('write').addClass('wrong').show();
+            }
+            $('#correct-count').text(correctCount);
+            $('#incorrect-count').text(incorrectCount);
+        }
+
+    </script>
+</body>
+
+</html>

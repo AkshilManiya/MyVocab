@@ -1,0 +1,206 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Verbs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/css/verbs/verbs.css">
+
+    <link rel="stylesheet" href="../static/css/verbs/result.css">
+    <link rel="stylesheet" href="../static/css/verbs/alphas.css">
+    <link rel="icon" href="../static/img/book.png" />
+
+    <style>
+
+        /* Test Section */
+        #test {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .inputs {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .q_word,
+        .a_word {
+            font-size: 20px;
+            padding: 12px;
+            margin: 10px auto;
+            width: 70%;
+            height: 50px;
+            border: 2px solid var(--primary-color);
+            border-radius: var(--border-radius);
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 600px) {
+
+            .q_word,
+            .a_word {
+                width: 90%;
+            }
+
+        }
+    </style>
+</head>
+
+<body>
+    <div class="nav-container">
+        <button onclick="window.location.href='../verbs/linker.html'">Link Verbs</button>
+        <button onclick="window.location.href='../verbs/quiz.html'">Quize</button>
+        <button onclick="window.location.href='../verbs/blanks.html'">Blanks</button>
+    </div>
+
+    <div class="result-frame">
+        <div class="result-data">
+            <div><label>Correct </label><span id="correct-count">0</span></div>
+            <div><label>Incorrect </label><span id="incorrect-count">0</span></div>
+            <div><label>Time </label><span id="timer">0s</span></div>
+        </div>
+        <button class="reset" onclick="initializeGame()">Reset</button>
+    </div>
+
+    <div id="test">
+        <div class="inputs">
+            <input type="text" class="q_word" id="english" disabled />
+            <input type="hidden" id="german" />
+            <input type="text" class="a_word" id="ans" />
+        </div>
+
+        <div class="alphabets">
+            <div onclick="write_text('Ä')" class="alphas">Ä</div>
+            <div onclick="write_text('Ö')" class="alphas">Ö</div>
+            <div onclick="write_text('Ü')" class="alphas">Ü</div>
+            <div onclick="write_text('ß')" class="alphas">ß</div>
+            <div onclick="write_text('ä')" class="alphas">ä</div>
+            <div onclick="write_text('ö')" class="alphas">ö</div>
+            <div onclick="write_text('ü')" class="alphas">ü</div>
+        </div>
+
+        <div class="opration_buttons">
+            <button onclick="test_fetch()">Next</button>
+            <button onclick="test_check()">Check</button>
+        </div>
+
+        <div class="result_frame" style="display: none;">
+            <div class="result" id="result">Lorem ipsum dolor sit amet</div>
+        </div>
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+
+        let correctCount = 0;
+        let incorrectCount = 0;
+        let startTime;
+        let timerRunning = false;
+
+        document.getElementById("ans").addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+                test_check();
+            } else if (event.key === "End") {
+                test_fetch();
+            }
+        });
+
+        $(document).ready(function () {
+            initializeGame();
+        });
+
+        function updateScore() {
+            $('#correct-count').text(correctCount);
+            $('#incorrect-count').text(incorrectCount);
+        }
+
+        function startTimer() {
+            let timeElapsed = 0;
+            $('#timer').text(`${timeElapsed}s`);
+            startTime = setInterval(() => {
+                timeElapsed++;
+                $('#timer').text(`${timeElapsed}s`);
+            }, 1000);
+        }
+
+        function resetGame() {
+            correctCount = 0;
+            incorrectCount = 0;
+            updateScore();
+            clearInterval(startTime);
+            timerRunning = false;
+            $('#timer').text('0s');
+        }
+
+        function write_text(alpha) {
+            let ansInput = $('#ans');
+            ansInput.val(ansInput.val() + alpha);
+            ansInput.focus();
+        }
+
+        function test_fetch() {
+            $.ajax({
+                url: 'https://avidenix.pythonanywhere.com/verbs/get_quiz',
+                type: 'GET',
+                success: function (response) {
+                    $('#ans').val('');
+                    $('.result_frame').hide();
+
+                    if (response.German && response.English) {
+                        let germanParts = response.German.split(',').map(part => part.trim());
+                        let firstGermanWord = germanParts[0];
+
+                        $('#german').val(firstGermanWord);
+                        $('#english').val(response.English + (germanParts[1] ? ` (${germanParts[1]})` : ''));
+                    } else {
+                        console.error('Invalid response structure:', response);
+                    }
+                },
+                error: function (error) {
+                    console.error('Translation error:', error);
+                    alert('Failed to fetch translation. Please try again.');
+                }
+            });
+        }
+
+        function test_check() {
+            let german = $('#german').val().trim();
+            let ans = $('#ans').val().trim();
+            let resultDiv = document.getElementById("result");
+
+            if (german === ans) {
+                correctCount++;
+                updateScore();
+                $('.result_frame').show();
+                resultDiv.innerText = 'Correct!';
+                resultDiv.classList.remove('wrong');
+                resultDiv.classList.add('write');
+                setTimeout(() => {
+                    test_fetch();
+                }, 200);
+            } else {
+                incorrectCount++;
+                updateScore();
+                $('.result_frame').show();
+                resultDiv.innerText = german;
+                resultDiv.classList.remove('write');
+                resultDiv.classList.add('wrong');
+            }
+        }
+
+        function initializeGame() {
+            resetGame();
+            test_fetch();
+            if (!timerRunning) {
+                startTimer();
+                timerRunning = true;
+            }
+        }
+    </script>
+
+</body>
+
+</html>

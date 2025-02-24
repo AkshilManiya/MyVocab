@@ -1,0 +1,243 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Verbs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/css/verbs/verbs.css">
+    <link rel="icon" href="../static/img/book.png" />
+
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #ffcc00;
+            --background-color: #f5f5f5;
+            --text-color: #333;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition-speed: 0.3s;
+        }
+
+        body {
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        /* Linker Container */
+        #linker-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 80%;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        /* Words Container */
+        .words {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .words_eng,
+        .words_ger {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 48%;
+            align-items: center;
+            margin: 20px;
+        }
+
+        .word_btn {
+            width: 200px;
+            height: 45px;
+            background-color: white;
+            border: 2px solid var(--primary-color);
+            padding: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--text-color);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: transform var(--transition-speed) ease, background-color var(--transition-speed) ease;
+            text-align: center;
+        }
+
+        .word_btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .selected {
+            background-color: lightgoldenrodyellow;
+            color: black;
+            border: 2px solid var(--secondary-color);
+        }
+
+        .matched {
+            background-color: lightgray;
+            color: white;
+            border: 2px solid gray;
+        }
+
+        /* Mobile CSS */
+        @media (max-width: 768px) {
+            #linker-container {
+                padding: 10px;
+                width: 100%;
+            }
+
+            .words {
+                gap: 0px;
+            }
+
+            .words_eng,
+            .words_ger {
+                width: 100%;
+                margin: 20px auto;
+            }
+
+            .word_btn {
+                width: 80%;
+                padding: 12px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="nav-container">
+        <button onclick="window.location.href='../verbs/linker.html'">Link Verbs</button>
+        <button onclick="window.location.href='../verbs/quiz.html'">Quize</button>
+        <button onclick="window.location.href='../verbs/blanks.html'">Blanks</button>
+    </div>
+
+    <div class="result-frame">
+        <div class="result-data">
+            <div><label>Correct </label><span id="correct-count">0</span></div>
+            <div><label>Incorrect </label><span id="incorrect-count">0</span></div>
+            <div><label>Time </label><span id="timer"></span></div>
+        </div>
+        <button class="reset" onclick="initializeGame()">Reset</button>
+    </div>
+
+    <div id="linker-container">
+        <div class="words">
+            <div class="words_eng"></div>
+            <div class="words_ger"></div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            initializeGame();
+        });
+
+        let correctCount = 0;
+        let incorrectCount = 0;
+        let selectedWord = null;
+        let selectedLang = null;
+        let startTime;
+        let timerRunning = false;
+
+        function initializeGame() {
+            resetGame();
+            fetchWords();
+        }
+
+        function resetGame() {
+            correctCount = 0;
+            incorrectCount = 0;
+            selectedWord = null;
+            selectedLang = null;
+            updateScore();
+            clearInterval(startTime);
+            timerRunning = false;
+            $('#timer').text('0s');
+        }
+
+        function fetchWords() {
+            $.ajax({
+                url: 'https://avidenix.pythonanywhere.com/verbs/get_linkers',
+                type: 'GET',
+                success: function (response) {
+                    $('.words_eng, .words_ger').empty();
+
+                    response.forEach((word, index) => {
+                        $('.words_eng').append(`<button class='word_btn' onclick="handleButtonClick(this, 'eng')" value="${index}">${word.English}</button>`);
+                        $('.words_ger').append(`<button class='word_btn' onclick="handleButtonClick(this, 'ger')" value="${index}">${word.German}</button>`);
+                    });
+                    shuffleButtons();
+                },
+                error: function () {
+                    alert('Failed to fetch words. Try again.');
+                }
+            });
+        }
+
+        function shuffleButtons() {
+            $('.words_ger button').sort(() => Math.random() - 0.5).appendTo('.words_ger');
+        }
+
+        function handleButtonClick(button, lang) {
+            if (!timerRunning) {
+                startTimer();
+                timerRunning = true;
+            }
+
+            const $button = $(button);
+
+            if (selectedWord) {
+                if (selectedLang === lang) {
+                    selectedWord.removeClass('selected');
+                    selectedWord = $button.addClass('selected');
+                } else {
+                    if (selectedWord.val() === $button.val()) {
+                        correctCount++;
+                        $button.add(selectedWord).addClass('matched').prop('disabled', true);
+                        if ($('.word_btn').filter((i, el) => !$(el).hasClass('matched')).length === 0) {
+                            fetchWords();
+                        }
+                    } else {
+                        incorrectCount++;
+                        $button.removeClass('selected');
+                    }
+                    selectedWord.removeClass('selected');
+                    selectedWord = null;
+                    updateScore();
+                }
+            } else {
+                selectedWord = $button.addClass('selected');
+                selectedLang = lang;
+            }
+        }
+
+        function updateScore() {
+            $('#correct-count').text(correctCount);
+            $('#incorrect-count').text(incorrectCount);
+        }
+
+        function startTimer() {
+            let timeElapsed = 0;
+            $('#timer').text(`${timeElapsed}s`);
+            startTime = setInterval(() => {
+                timeElapsed++;
+                $('#timer').text(`${timeElapsed}s`);
+            }, 1000);
+        }
+
+
+    </script>
+</body>
+
+</html>
