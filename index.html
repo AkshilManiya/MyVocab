@@ -1,34 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Language Learning</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <link rel="stylesheet" href="static/css/index.css">
+    <title>Eng to Ger</title>
     <link rel="icon" href="static/img/book.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script type="module">
+        import config from "./static/js/config.js";
+        window.configData = config;
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+    <link rel="stylesheet" href="static/css/index.css">
 </head>
+
 <body>
+
+    <script src="static/js/index.js"></script>
     <div class="nav-container">
-        <button onclick="window.location.href='verbs/linker.html'">Verbs</button>
-        <button onclick="window.location.href='nouns'">Nouns</button>
+        <div class="nav-frame nav-frame--left">
+            <!-- <img src="static/img/back.png" class="nav-icon" onclick="back()" alt="Back button"> -->
+        </div>
+
+        <div class="nav-frame nav-frame--center">
+            <button class="nav-button" onclick="window.location.href='verbs/linker.html'">Verbs</button>
+            <button class="nav-button" onclick="window.location.href='nouns/nouns.html'">Nouns</button>
+        </div>
+
+        <div class="nav-frame nav-frame--right">
+            <img src="static/img/setting.png" class="nav-icon" onclick="toggleSider()" alt="Settings button">
+        </div>
+
+        <div class="nav-sider" id="siderPanel">
+            <div class="nav-sider__control">
+                <label class="nav-sider__label">V : </label>
+                <select class="nav-sider__select" id="V">
+                    <option value="V1" selected>V1</option>
+                    <option value="V2">V2</option>
+                    <option value="V3">V3</option>
+                </select>
+            </div>
+            <div class="nav-sider__control">
+                <label class="nav-sider__label">Mode : </label>
+                <select class="nav-sider__select" id="Mode">
+                    <option value="common" selected>Common</option>
+                    <option value="all">All</option>
+                </select>
+            </div>
+            <div class="nav-sider__control">
+                <label class="nav-sider__label">Sound : </label>
+                <label class="switch">
+                    <input type="checkbox" id="Sound" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
     </div>
+
+
     <div class="search-container">
         <input type="text" id="search" placeholder="Search for verbs or nouns..." onkeyup="Search()" />
     </div>
     <div class="data-container">
         <div class="verbs" id="data">
-            <div class="heading">Verbs</div>
             <p>No data found</p>
         </div>
     </div>
+
     <script>
+        const defaultSettings = {
+            V: 'V1',
+            Mode: 'common',
+            Sound: true
+        };
+
+        // Get settings from the URL or use defaults
+        function getSettings() {
+            const params = new URLSearchParams(window.location.search);
+
+            // Allowed values
+            const validV = ['V1', 'V2', 'V3'];
+            const validMode = ['common', 'all'];
+
+            // Get values from URL or fallback to default
+            let V = params.get('V');
+            let Mode = params.get('Mode');
+            let Sound = params.get('Sound');
+
+            // Validate and correct invalid values
+            if (!validV.includes(V)) V = defaultSettings.V;
+            if (!validMode.includes(Mode)) Mode = defaultSettings.Mode;
+            Sound = Sound !== 'false'; // Convert to boolean, default is true
+
+            return { V, Mode, Sound };
+        }
+
+
+        // Apply settings to the form elements
+        function applySettings(settings) {
+            $('#V').val(settings.V);
+            $('#Mode').val(settings.Mode);
+            $('#Sound').prop('checked', settings.Sound);
+        }
+
+        // Update the URL with current settings (without reload)
+        function updateUrlWithSettings() {
+            const newSettings = {
+                V: $('#V').val(),
+                Mode: $('#Mode').val(),
+                Sound: $('#Sound').is(':checked')
+            };
+
+            const params = new URLSearchParams();
+            if (newSettings.V !== defaultSettings.V) params.set('V', newSettings.V);
+            if (newSettings.Mode !== defaultSettings.Mode) params.set('Mode', newSettings.Mode);
+            if (newSettings.Sound !== defaultSettings.Sound) params.set('Sound', newSettings.Sound);
+
+            const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+            window.history.pushState({}, '', newUrl);
+
+            // Update navigation links with new settings
+            updateNavLinks(newSettings);
+        }
+
+        // Ensure settings persist when navigating between pages
+        function updateNavLinks(settings) {
+            $('.nav-button').each(function () {
+                const href = $(this).attr('onclick').match(/'([^']+)'/)[1]; // Extract URL from onclick
+                const url = new URL(href, window.location.href);
+                Object.entries(settings).forEach(([key, value]) => url.searchParams.set(key, value));
+                $(this).attr('onclick', `window.location.href='${url.href}'`);
+            });
+        }
+
+        $(document).ready(function () {
+            const settings = getSettings();
+            applySettings(settings);
+            updateNavLinks(settings);
+
+            // Listen for changes in settings
+            $('.nav-sider__select, #Sound').on('change', updateUrlWithSettings);
+        });
+    </script>
+
+    <script>
+
         function Search() {
             var search = $("#search").val().toLowerCase();
-            console.log(search);
-
             $.ajax({
-                url: "https://avidenix.pythonanywhere.com/verbs/search",
+                url: `${window.configData.apiUrl}/verbs/search`,
                 type: "GET",
                 data: { query: search },
                 success: function (response) {
@@ -83,4 +206,5 @@
 
     </script>
 </body>
+
 </html>

@@ -3,15 +3,21 @@
 
 <head>
     <title>Verbs</title>
+    <link rel="icon" href="../static/img/book.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../static/css/verbs/verbs.css">
 
+    <script type="module">
+        import config from "./../static/js/config.js";
+        window.configData = config;
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <link rel="stylesheet" href="../static/css/verbs/verbs.css">
     <link rel="stylesheet" href="../static/css/verbs/result.css">
     <link rel="stylesheet" href="../static/css/verbs/alphas.css">
-    <link rel="icon" href="../static/img/book.png" />
-
+    <link rel="stylesheet" href="../static/css/Sound.css">
     <style>
-
         /* Test Section */
         #test {
             padding: 20px;
@@ -49,10 +55,47 @@
 </head>
 
 <body>
+    <script src="../static/js/index.js"></script>
     <div class="nav-container">
-        <button onclick="window.location.href='../verbs/linker.html'">Link Verbs</button>
-        <button onclick="window.location.href='../verbs/quiz.html'">Quize</button>
-        <button onclick="window.location.href='../verbs/blanks.html'">Blanks</button>
+        <div class="nav-frame nav-frame--left">
+            <img src="../static/img/back.png" class="nav-icon" onclick="window.location.href='../index.html'"
+                alt="Back button">
+        </div>
+
+        <div class="nav-frame nav-frame--center">
+            <button class="nav-button" onclick="window.location.href='../verbs/linker.html'">Link Verbs</button>
+            <button class="nav-button selected-page" onclick="window.location.href='../verbs/quiz.html'">Quize</button>
+            <button class="nav-button" onclick="window.location.href='../verbs/blanks.html'">Blanks</button>
+        </div>
+
+        <div class="nav-frame nav-frame--right">
+            <img src="../static/img/setting.png" class="nav-icon" onclick="toggleSider()" alt="Settings button">
+        </div>
+
+        <div class="nav-sider" id="siderPanel">
+            <div class="nav-sider__control">
+                <label class="nav-sider__label">V : </label>
+                <select class="nav-sider__select" id="V">
+                    <option value="V1" selected>V1</option>
+                    <option value="V2">V2</option>
+                    <option value="V3">V3</option>
+                </select>
+            </div>
+            <div class="nav-sider__control">
+                <label class="nav-sider__label">Mode : </label>
+                <select class="nav-sider__select" id="Mode">
+                    <option value="common" selected>Common</option>
+                    <option value="all">All</option>
+                </select>
+            </div>
+            <div class="nav-sider__control">
+                <label class="nav-sider__label">Sound : </label>
+                <label class="switch">
+                    <input type="checkbox" id="Sound" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
     </div>
 
     <div class="result-frame">
@@ -92,7 +135,93 @@
 
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        const defaultSettings = {
+            V: 'V1',
+            Mode: 'common',
+            Sound: true
+        };
+
+        // Get settings from the URL or use defaults
+        function getSettings() {
+            const params = new URLSearchParams(window.location.search);
+
+            // Allowed values
+            const validV = ['V1', 'V2', 'V3'];
+            const validMode = ['common', 'all'];
+
+            // Get values from URL or fallback to default
+            let V = params.get('V');
+            let Mode = params.get('Mode');
+            let Sound = params.get('Sound');
+
+            // Validate and correct invalid values
+            if (!validV.includes(V)) V = defaultSettings.V;
+            if (!validMode.includes(Mode)) Mode = defaultSettings.Mode;
+            Sound = Sound !== 'false'; // Convert to boolean, default is true
+
+            return { V, Mode, Sound };
+        }
+
+
+        // Apply settings to the form elements
+        function applySettings(settings) {
+            $('#V').val(settings.V);
+            $('#Mode').val(settings.Mode);
+            $('#Sound').prop('checked', settings.Sound);
+        }
+
+        // Update the URL with current settings (without reload)
+        function updateUrlWithSettings() {
+            const newSettings = {
+                V: $('#V').val(),
+                Mode: $('#Mode').val(),
+                Sound: $('#Sound').is(':checked')
+            };
+
+            const params = new URLSearchParams();
+            if (newSettings.V !== defaultSettings.V) params.set('V', newSettings.V);
+            if (newSettings.Mode !== defaultSettings.Mode) params.set('Mode', newSettings.Mode);
+            if (newSettings.Sound !== defaultSettings.Sound) params.set('Sound', newSettings.Sound);
+
+            const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+            window.history.pushState({}, '', newUrl);
+
+            // Update navigation links with new settings
+            updateNavLinks(newSettings);
+        }
+
+        // Ensure settings persist when navigating between pages
+        function updateNavLinks(settings) {
+            $('.nav-button').each(function () {
+                const href = $(this).attr('onclick').match(/'([^']+)'/)[1]; // Extract URL from onclick
+                const url = new URL(href, window.location.href);
+                Object.entries(settings).forEach(([key, value]) => url.searchParams.set(key, value));
+                $(this).attr('onclick', `window.location.href='${url.href}'`);
+            });
+
+            // Update Back button link
+            const backButton = $('.nav-frame--left .nav-icon');
+            if (backButton.length) {
+                const href = backButton.attr('onclick').match(/'([^']+)'/)[1]; // Extract URL
+                const url = new URL(href, window.location.href);
+                Object.entries(settings).forEach(([key, value]) => url.searchParams.set(key, value));
+                backButton.attr('onclick', `window.location.href='${url.href}'`);
+            }
+
+            initializeGame()
+
+        }
+
+        $(document).ready(function () {
+            const settings = getSettings();
+            applySettings(settings);
+            updateNavLinks(settings);
+
+            // Listen for changes in settings
+            $('.nav-sider__select, #Sound').on('change', updateUrlWithSettings);
+        });
+    </script>
     <script>
 
         let correctCount = 0;
@@ -108,9 +237,6 @@
             }
         });
 
-        $(document).ready(function () {
-            initializeGame();
-        });
 
         function updateScore() {
             $('#correct-count').text(correctCount);
@@ -143,8 +269,9 @@
 
         function test_fetch() {
             $.ajax({
-                url: 'https://avidenix.pythonanywhere.com/verbs/get_quiz',
+                url: `${window.configData.apiUrl}/verbs/get_quiz`,
                 type: 'GET',
+                data: { V: $('#V').val(), Mode: $('#Mode').val() },
                 success: function (response) {
                     $('#ans').val('');
                     $('.result_frame').hide();

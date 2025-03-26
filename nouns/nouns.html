@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Nouns</title>
+    <link rel="icon" href="../static/img/book.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script type="module">
+        import config from "./../static/js/config.js";
+        window.configData = config;
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <link rel="stylesheet" href="../static/css/index.css">
+    <link rel="icon" href="../static/img/book.png" />
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #ffcc00;
+            --background-color: #f5f5f5;
+            --text-color: #333;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition-speed: 0.3s;
+        }
+
+        .nouns {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .noun-box {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            width: 65%;
+            margin: auto;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            background: #fff;
+            box-shadow: var(--box-shadow);
+            font-size: 1.2rem;
+            transition: transform var(--transition-speed);
+        }
+
+        .noun-box:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .noun-box div {
+            padding: 5px 10px;
+        }
+
+        .nouns .translation {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: center;
+            flex-wrap: nowrap;
+            gap: 5px;
+        }
+
+        .nouns .translation div {}
+
+        /* =============================== */
+
+        .list-group {
+            width: 65%;
+            display: flex;
+            flex-direction: column;
+            margin: auto;
+            background: #fff;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 15px;
+            gap: 5px;
+        }
+
+        .list-item {
+            width: 100%;
+            padding: 10px;
+            text-align: left;
+            font-size: 1.2rem;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            border: 1px solid #ddd;
+            background: #fff;
+            transition: background var(--transition-speed), transform var(--transition-speed);
+            box-sizing: border-box;
+        }
+
+        .list-item:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .list-item span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 25px;
+            min-height: 15px;
+            font-weight: bold;
+            font-size: 1rem;
+            color: #fff;
+            background: var(--secondary-color);
+            border-radius: 50%;
+            padding: 5px;
+            margin-right: 15px;
+            border: none;
+        }
+
+        @media (max-width: 768px) {
+            .noun-box {
+                width: 90%;
+            }
+
+
+
+            .list-group {
+                width: 90%;
+                box-sizing: border-box;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <script src="../static/js/index.js"></script>
+    <div class="nav-container">
+        <div class="nav-frame nav-frame--left">
+            <img src="../static/img/back.png" class="nav-icon" onclick="window.location.href='../index.html'"
+                alt="Back button">
+        </div>
+
+        <div class="nav-frame nav-frame--center">
+            <button class="nav-button" onclick="window.location.href='../nouns/nouns.html'">Nonus</button>
+        </div>
+
+        <div class="nav-frame nav-frame--right">
+            <img src="../static/img/setting.png" class="nav-icon" onclick="toggleSider()" alt="Settings button">
+        </div>
+
+        <div class="nav-sider" id="siderPanel">
+            <div class="nav-sider__control">
+                <label class="nav-sider__label">Sound : </label>
+                <label class="switch">
+                    <input type="checkbox" id="Sound" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="search-container">
+        <input type="text" id="search" placeholder="Search for nouns..." onkeyup="Search()" />
+    </div>
+    <div class="data-container">
+        <div class="nouns" id="data">
+        </div>
+    </div>
+    <div class="list-group" id="ListGroup">
+    </div>
+
+    <script>
+        const defaultSettings = {
+            V: 'V1',
+            Mode: 'common',
+            Sound: true
+        };
+
+        // Get settings from the URL or use defaults
+        function getSettings() {
+            const params = new URLSearchParams(window.location.search);
+
+            // Allowed values
+            const validV = ['V1', 'V2', 'V3'];
+            const validMode = ['common', 'all'];
+
+            // Get values from URL or fallback to default
+            let V = params.get('V');
+            let Mode = params.get('Mode');
+            let Sound = params.get('Sound');
+
+            // Validate and correct invalid values
+            if (!validV.includes(V)) V = defaultSettings.V;
+            if (!validMode.includes(Mode)) Mode = defaultSettings.Mode;
+            Sound = Sound !== 'false'; // Convert to boolean, default is true
+
+            return { V, Mode, Sound };
+        }
+
+
+        // Apply settings to the form elements
+        function applySettings(settings) {
+            $('#V').val(settings.V);
+            $('#Mode').val(settings.Mode);
+            $('#Sound').prop('checked', settings.Sound);
+        }
+
+        // Update the URL with current settings (without reload)
+        function updateUrlWithSettings() {
+            const newSettings = {
+                V: $('#V').val(),
+                Mode: $('#Mode').val(),
+                Sound: $('#Sound').is(':checked')
+            };
+
+            const params = new URLSearchParams();
+            if (newSettings.V !== defaultSettings.V) params.set('V', newSettings.V);
+            if (newSettings.Mode !== defaultSettings.Mode) params.set('Mode', newSettings.Mode);
+            if (newSettings.Sound !== defaultSettings.Sound) params.set('Sound', newSettings.Sound);
+
+            const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+            window.history.pushState({}, '', newUrl);
+
+            // Update navigation links with new settings
+            updateNavLinks(newSettings);
+        }
+
+        // Ensure settings persist when navigating between pages
+        function updateNavLinks(settings) {
+            $('.nav-button').each(function () {
+                const href = $(this).attr('onclick').match(/'([^']+)'/)[1]; // Extract URL from onclick
+                const url = new URL(href, window.location.href);
+                Object.entries(settings).forEach(([key, value]) => url.searchParams.set(key, value));
+                $(this).attr('onclick', `window.location.href='${url.href}'`);
+            });
+
+            // Update Back button link
+            const backButton = $('.nav-frame--left .nav-icon');
+            if (backButton.length) {
+                const href = backButton.attr('onclick').match(/'([^']+)'/)[1]; // Extract URL
+                const url = new URL(href, window.location.href);
+                Object.entries(settings).forEach(([key, value]) => url.searchParams.set(key, value));
+                backButton.attr('onclick', `window.location.href='${url.href}'`);
+            }
+        }
+
+        $(document).ready(function () {
+            const settings = getSettings();
+            applySettings(settings);
+            updateNavLinks(settings);
+
+            // Listen for changes in settings
+            $('.nav-sider__select, #Sound').on('change', updateUrlWithSettings);
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+            FetchListGroup();
+        });
+
+        function FetchListGroup() {
+            $.ajax({
+                url: `${window.configData.apiUrl}/nouns/FetchGroup`,
+                type: "GET",
+                success: function (response) {
+                    console.log(response);
+
+                    if (Array.isArray(response) && response.length > 0) {
+                        let listGroup = $("#ListGroup");
+                        listGroup.empty(); // Clear existing items
+
+                        response.forEach((category, index) => {
+                            listGroup.append(`<div class="list-item"><span>${index + 1}</span> ${category}</div>`);
+                        });
+                    } else {
+                        $("#ListGroup").html("<p>No categories found.</p>");
+                    }
+                },
+                error: function () {
+                    $("#ListGroup").html("<p>Error fetching data</p>");
+                }
+            });
+        }
+
+
+        function Search() {
+            var search = $("#search").val().toLowerCase();
+            console.log(search);
+
+            $.ajax({
+                url: `${window.configData.apiUrl}/nouns/search?query=${encodeURIComponent(search)}`,
+                type: "GET",
+                success: function (response) {
+                    console.log(response);
+
+                    if (response.error) {
+                        $("#data").html(``);
+                        $(".list-group").show();
+                        return;
+                    }
+
+                    let html = "";
+                    response.forEach(noun => {
+                        html += `
+                    <div class="noun-box">
+                        <div>${noun.English} : </div>
+                        <div class="translation">
+                            <div>${noun.Gender}</div>
+                            <div>${noun.German}</div>
+                        </div>
+                    </div>
+                `;
+                    });
+
+                    $("#data").html(html);
+                    $(".list-group").hide();
+                },
+                error: function () {
+                    $("#data").html("<p>Error fetching data</p>");
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
