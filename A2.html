@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="static/img/book.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="static/css/index.css">
+    <!-- Removed duplicate jQuery import -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+    <script type="module">
+        import config from "./static/js/config.js";
+        window.configData = config;
+    </script>
+
+    <link rel="stylesheet" href="static/css/verbs/verbs.css">
+    <link rel="stylesheet" href="static/css/verbs/alphas.css">
+    <link rel="stylesheet" href="static/css/verbs/result.css">
+    <title>A2</title>
+    <style>
+        :root {
+            /* Color Variables */
+            --primary-color: #4a90e2;
+            --primary-dark: #3a7bc8;
+            --secondary-color: #ffcc00;
+            --secondary-dark: #e6b800;
+            --background-color: #f5f5f5;
+            --text-color: #333;
+            --text-light: #666;
+            --white: #ffffff;
+            --gender-feminine: #ff9ff3;
+            --gender-masculine: #48dbfb;
+            --gender-neuter: #1dd1a1;
+            --gender-unknown: #feca57;
+
+            /* Spacing Variables */
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+
+            /* Border Variables */
+            --border-radius: 12px;
+            --border-radius-sm: 6px;
+
+            /* Effect Variables */
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --box-shadow-md: 0 6px 12px rgba(0, 0, 0, 0.15);
+            --transition-speed: 0.3s;
+        }
+
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            padding: var(--spacing-md);
+            background-color: var(--primary-color);
+            box-shadow: var(--box-shadow);
+            justify-content: space-between;
+        }
+
+        .nav-icon {
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+        }
+
+        .right-nav {
+            display: flex;
+            align-items: stretch;
+            flex-direction: row;
+            align-content: center;
+            justify-content: center;
+            gap: 10px;
+
+        }
+
+        #chapterSelect {
+            padding: var(--spacing-sm);
+            border-radius: var(--border-radius-sm);
+            border: 1px solid var(--primary-dark);
+            font-size: 16px;
+            background-color: var(--white);
+        }
+
+
+        .reading-button {
+            padding: var(--spacing-sm) var(--spacing-lg);
+            background-color: var(--secondary-color);
+            color: var(--white);
+            border: none;
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            transition: background-color var(--transition-speed);
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .reading-button:hover {
+            background-color: var(--secondary-dark);
+        }
+
+
+        /* Test Section */
+        #test {
+            padding: 20px;
+            text-align: center;
+            height: 70vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: stretch;
+        }
+
+        .inputs {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .q_word,
+        .a_word {
+            font-size: 20px;
+            padding: 12px;
+            margin: 10px auto;
+            width: 70%;
+            height: 50px;
+            border: 2px solid var(--primary-color);
+            border-radius: var(--border-radius);
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .a_word:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
+
+        @media (max-width: 600px) {
+
+            .q_word,
+            .a_word {
+                width: 90%;
+            }
+
+        }
+
+        .write,
+        .wrong {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+
+
+
+
+
+        #read_frame {
+            max-width: 80%;
+            margin: 20px auto;
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .vocabulary-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: var(--spacing-md);
+            text-align: center;
+        }
+
+        .vocabulary-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .vocabulary-header .chapter-info {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-top: var(--spacing-sm);
+        }
+
+        .vocabulary-list {
+            padding: var(--spacing-md);
+        }
+
+        .vocabulary-card {
+            display: flex;
+            margin-bottom: 10px;
+            padding: 5px;
+            background-color: #f8f8f8;
+            border-radius: var(--border-radius);
+            transition: transform 0.2s ease;
+            align-items: center;
+        }
+
+        .vocabulary-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .german-word {
+            flex: 1;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .english-word {
+            flex: 1;
+            font-style: italic;
+            color: var(--text-light);
+        }
+
+        .gender-indicator {
+            width: 35px;
+            height: 30px;
+            border-radius: 25%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: var(--spacing-md);
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        .gender-feminine {
+            background-color: var(--gender-feminine);
+        }
+
+        .gender-masculine {
+            background-color: var(--gender-masculine);
+        }
+
+        .gender-neuter {
+            background-color: var(--gender-neuter);
+        }
+
+        .gender-unknown {
+            background-color: var(--gender-unknown);
+        }
+
+        .index-number {
+            margin: 0px 10px;
+            min-width: 50px;
+        }
+
+        /* Mobile Styles */
+        @media (max-width: 748) {
+
+            #read_frame {
+                max-width: 90%;
+                margin: 0;
+                border-radius: 0;
+            }
+
+            .vocabulary-card {
+                flex-direction: row;
+                padding: var(--spacing-sm);
+                gap: 10px;
+            }
+
+            .german-word,
+            .english-word {
+                font-size: 1rem;
+            }
+
+            .gender-indicator {
+                margin-right: 0;
+                margin-bottom: var(--spacing-sm);
+                align-self: flex-start;
+            }
+
+            .vocabulary-header h2 {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <img src="static/img/back.png" class="nav-icon" onclick="window.location.href='index.html'" alt="Back button">
+
+        <div class="right-nav">
+            <button class="reading-button" onclick="quiz_frame()">Quiz</button>
+            <button class="reading-button" onclick="read_frame()">Read</button>
+            <select id="chapterSelect" onchange="fetch_chap()">
+                <option value="1" selected>Chapter 1</option>
+                <option value="2">Chapter 2</option>
+                <option value="3">Chapter 3</option>
+                <option value="4">Chapter 4</option>
+            </select>
+        </div>
+    </nav>
+
+    <div id="quiz_frame">
+        <div class="result-frame">
+            <div class="result-data">
+                <div><label>Correct </label><span id="correct-count">0</span></div>
+                <div><label>Incorrect </label><span id="incorrect-count">0</span></div>
+            </div>
+            <button class="reset" onclick="initializeGame()">Reset</button>
+        </div>
+
+        <div id="test">
+            <div class="inputs">
+                <input type="text" class="q_word" id="english" disabled />
+                <input type="hidden" id="german" />
+                <input type="text" class="a_word" id="ans" placeholder="Type your answer here..." autocomplete="off" />
+            </div>
+
+            <div class="alphabets">
+                <div onclick="write_text('Ä')" class="alphas">Ä</div>
+                <div onclick="write_text('Ö')" class="alphas">Ö</div>
+                <div onclick="write_text('Ü')" class="alphas">Ü</div>
+                <div onclick="write_text('ß')" class="alphas">ß</div>
+                <div onclick="write_text('ä')" class="alphas">ä</div>
+                <div onclick="write_text('ö')" class="alphas">ö</div>
+                <div onclick="write_text('ü')" class="alphas">ü</div>
+            </div>
+
+            <div class="opration_buttons">
+                <button onclick="test_fetch()">Next</button>
+                <button onclick="test_check()">Check</button>
+            </div>
+
+            <div class="result-frame" style="display: none;">
+                <div class="result" id="result"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="read_frame">
+        <div class="vocabulary-header">
+            <h2>Chapter Vocabulary</h2>
+            <div class="chapter-info">Chapter 1 • 178 words</div>
+        </div>
+        <div class="vocabulary-list" id="vocabularyList">
+            <!-- Vocabulary items will be inserted here by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let correctCount = 0;
+        let incorrectCount = 0;
+
+        // Initialize when DOM is loaded
+        $(document).ready(function () {
+            // Set up event listeners
+            document.getElementById("ans").addEventListener("keydown", function (event) {
+                if (event.key === "Enter") {
+                    test_check();
+                } else if (event.key === "End") {
+                    test_fetch();
+                }
+            });
+
+            read_frame();
+        });
+
+
+        function fetch_chap() {
+            if ($("#read_frame").is(":visible")) {
+                fetch_vocabulary();
+            } else if ($("#quiz_frame").is(":visible")) {
+                test_fetch();
+            }
+        }
+
+        function quiz_frame() {
+            $("#quiz_frame").show();
+            $("#read_frame").hide();
+            initializeGame();
+        }
+
+        function read_frame() {
+            $("#read_frame").show();
+            $("#quiz_frame").hide();
+            fetch_vocabulary();
+        }
+
+        function updateScore() {
+            $('#correct-count').text(correctCount);
+            $('#incorrect-count').text(incorrectCount);
+        }
+
+        function write_text(alpha) {
+            let ansInput = $('#ans');
+            let currentPosition = ansInput[0].selectionStart;
+            let currentValue = ansInput.val();
+
+            // Insert the character at the current cursor position
+            ansInput.val(currentValue.substring(0, currentPosition) + alpha + currentValue.substring(currentPosition));
+
+            // Move cursor after the inserted character
+            ansInput[0].setSelectionRange(currentPosition + 1, currentPosition + 1);
+            ansInput.focus();
+        }
+
+        function test_fetch() {
+            let chpt = $('#chapterSelect').val();
+            $.ajax({
+                url: `${window.configData.apiUrl}/A2/${chpt}/get_quiz`,
+                type: 'GET',
+                success: function (response) {
+                    if (response && response.German && response.English) {
+                        $('#ans').val('');
+
+                        let germanParts = response.German.split(',').map(part => part.trim());
+                        let firstGermanWord = germanParts[0];
+
+                        $('#german').val(firstGermanWord);
+                        $('#english').val(response.English + (germanParts.length > 1 ? ` (${germanParts.slice(1).join(', ')})` : ''));
+                    } else {
+                        console.error('Invalid response structure:', response);
+                        alert('Received invalid data from server. Please try again.');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('AJAX error:', status, error);
+                    alert('Failed to fetch quiz. Please check your connection and try again.');
+                }
+            });
+        }
+
+        function test_check() {
+            let german = $('#german').val().trim();
+            let ans = $('#ans').val().trim();
+            let resultDiv = $('#result');
+            let resultFrame = $('.result-frame').eq(1); // The second result-frame div
+
+            if (!german) {
+                alert('No question loaded. Please click Next first.');
+                return;
+            }
+
+            if (!ans) {
+                alert('Please enter an answer before checking.');
+                return;
+            }
+
+            if (german.toLowerCase() === ans.toLowerCase()) {
+                correctCount++;
+                resultFrame.show();
+                resultDiv.text('Correct!').removeClass('wrong').addClass('write');
+                setTimeout(() => {
+                    test_fetch();
+                }, 200);
+            } else {
+                incorrectCount++;
+                resultFrame.show();
+                resultDiv.text(`Correct answer: ${german}`).removeClass('write').addClass('wrong');
+            }
+
+            updateScore();
+        }
+
+        function resetGame() {
+            correctCount = 0;
+            incorrectCount = 0;
+            updateScore();
+            $('#ans').val('');
+            $('#german').val('');
+            $('#english').val('');
+        }
+
+        function initializeGame() {
+            resetGame();
+            test_fetch();
+        }
+
+
+        function fetch_vocabulary() {
+            let chpt = $('#chapterSelect').val();
+            $.ajax({
+                url: `${window.configData.apiUrl}/A2/${chpt}/get_list`,
+                type: 'GET',
+                success: function (response) {
+                    if (response && response.vocabulary) {
+                        renderVocabulary(response);
+                    } else {
+                        console.error('Invalid response structure:', response);
+                        alert('Received invalid data from server. Please try again.');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('AJAX error:', status, error);
+                    alert('Failed to fetch quiz. Please check your connection and try again.');
+                }
+            });
+        }
+
+
+        // Function to render vocabulary
+        function renderVocabulary(vocabularyData) {
+            const $listContainer = $('#vocabularyList');
+            $listContainer.empty();
+
+            $.each(vocabularyData.vocabulary, function (index, item) {
+                // Determine gender class
+                let genderClass = 'gender-unknown';
+                if (item.Gender === 'die') genderClass = 'gender-feminine';
+                else if (item.Gender === 'der') genderClass = 'gender-masculine';
+                else if (item.Gender === 'das') genderClass = 'gender-neuter';
+
+                const genderSymbol = item.Gender === 'unknown' ? '' : item.Gender;
+
+                $('<div>')
+                    .addClass('vocabulary-card')
+                    .html(`
+                    <div class="index-number">${index + 1}</div>
+                    <div class="gender-indicator ${genderClass != 'gender-unknown' ? genderClass : ''}">${genderSymbol}</div>
+                    <div class="german-word">${item.German}</div>
+                    <div class="english-word">${item.English}</div>
+                `)
+                    .appendTo($listContainer);
+            });
+            $('.chapter-info').text(`Chapter ${vocabularyData.chapter} • ${vocabularyData.count} words`);
+        }
+
+    </script>
+</body>
+
+</html>
